@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.16)
 project(Optick LANGUAGES CXX VERSION 1.3.0)
 
 
@@ -48,8 +48,8 @@ target_include_directories(OptickCore
 	PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
 )
-set_target_properties(OptickCore 
-	PROPERTIES 
+set_target_properties(OptickCore
+	PROPERTIES
 		PUBLIC_HEADER "${CMAKE_CURRENT_LIST_DIR}/src/optick.h;${CMAKE_CURRENT_LIST_DIR}/src/optick.config.h"
 		DEBUG_POSTFIX d # So that we can install debug and release side by side
 )
@@ -119,10 +119,10 @@ if(OPTICK_INSTALL_TARGETS)
 	configure_package_config_file(
 		${PROJECT_SOURCE_DIR}/tools/${PROJECT_NAME}Config.cmake.in
 		${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-		INSTALL_DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR} 
+		INSTALL_DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
 		# Imported targets do not require the following macros
 		NO_SET_AND_CHECK_MACRO
-		NO_CHECK_REQUIRED_COMPONENTS_MACRO 
+		NO_CHECK_REQUIRED_COMPONENTS_MACRO
 	)
 
 	install(TARGETS OptickCore
@@ -136,14 +136,14 @@ if(OPTICK_INSTALL_TARGETS)
 	)
 
 	install(
-		EXPORT ${PROJECT_NAME}_Targets 
+		EXPORT ${PROJECT_NAME}_Targets
 		NAMESPACE ${PROJECT_NAME}::
 		FILE ${PROJECT_NAME}Targets.cmake
 		DESTINATION ${${PROJECT_NAME}_INSTALL_CMAKEDIR}
 	)
 
 
-	install(FILES 
+	install(FILES
 		${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
 		${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
 		DESTINATION
