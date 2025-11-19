@@ -4,11 +4,8 @@
 #include "dungeon_generator.h"
 #include "transform2d.h"
 #include "sprite.h"
-#include "hero.h"
 #include "enemy.h"
 #include "world.h"
-#include "camera2d.h"
-#include "dungeon_restrictor.h"
 #include "tileset.h"
 #include "food_generator.h"
 #include "health.h"
@@ -16,12 +13,8 @@
 #include "food_consumer.h"
 #include "starvation_system.h"
 #include "tiredness_system.h"
-#include "background_tag.h"
 #include "predator.h"
 
-const int LevelWidth = 120;
-const int LevelHeight = 50;
-const int RoomAttempts = 100;
 const int BotPopulationCount = 100;
 const float PredatorProbability = 0.2f;
 const int InitialFoodAmount = 100;
@@ -30,12 +23,6 @@ std::vector<std::unique_ptr<IFoodFabrique>> create_food_fabriques(World &world, 
 
 void init_world( SDL_Renderer* renderer, World& world)
 {
-
-    auto camera = world.create_object();
-    camera->add_component<Camera2D>(32.f);
-    camera->add_component<Transform2D>(0, 0);
-
-
     const int tileSize = 16;
     TexturePtr tilemap = LoadTextureFromFile("assets/kenney_tiny-dungeon/Tilemap/tilemap.png", renderer);
     std::vector<Sprite> sprites;
@@ -60,8 +47,8 @@ void init_world( SDL_Renderer* renderer, World& world)
         ));
     }
 
-    auto dungeon = std::make_shared<Dungeon>(LevelWidth, LevelHeight, RoomAttempts);
-    const auto &grid = dungeon->getGrid();
+    auto &dungeon = world.dungeon;
+    const auto &grid = dungeon.getGrid();
     for (int i = 0; i < LevelHeight; ++i)
         for (int j = 0; j < LevelWidth; ++j)
         {
@@ -72,31 +59,29 @@ void init_world( SDL_Renderer* renderer, World& world)
                 spriteName = "wall";
             }
             if (spriteName) {
-                auto newCell = world.create_object();
-                newCell->add_component<Sprite>(tileset.get_tile(spriteName));
-                newCell->add_component<Transform2D>(j, i);
-                newCell->add_component<BackGroundTag>();
+                world.cells.sprites.push_back(tileset.get_tile(spriteName));
+                world.cells.transforms.push_back(Transform2D{(double)j, (double)i});
             }
         }
 
-    auto heroPos = dungeon->getRandomFloorPosition();
-    auto hero = world.create_object();
-    hero->add_component<Sprite>(tileset.get_tile("knight"));
-    hero->add_component<Transform2D>(heroPos.x, heroPos.y);
-    hero->add_component<Hero>(camera);
-    hero->add_component<IRestrictor>((IRestrictor *)(new DungeonRestrictor(dungeon)));
-    hero->add_component<Health>(100);
-    hero->add_component<Stamina>(100);
-    hero->add_component<FoodConsumer>();
+    {
+        auto heroPos = dungeon.getRandomFloorPosition();
+        world.characters.sprites.push_back(tileset.get_tile("knight"));
+        world.characters.transforms.push_back({(double)heroPos.x, (double)heroPos.y});
+        world.characters.healths.push_back(100);
+        world.characters.staminas.push_back(100);
+        world.characters.isHero.push_back(true);
+        world.characters.isPredator.push_back(false);
+    }
+
 
     for (int e = 0; e < BotPopulationCount; ++e) {
         const bool isPredator = (rand() % 100) < int(PredatorProbability * 100.f);
-        auto enemyPos = dungeon->getRandomFloorPosition();
+        auto enemyPos = dungeon.getRandomFloorPosition();
         auto enemy = world.create_object();
         enemy->add_component<Sprite>(isPredator ? tileset.get_tile("ghost") : tileset.get_tile("peasant"));
         enemy->add_component<Transform2D>(enemyPos.x, enemyPos.y);
         enemy->add_component<Enemy>();
-        enemy->add_component<IRestrictor>((IRestrictor *)(new DungeonRestrictor(dungeon)));
         enemy->add_component<Health>(100);
         enemy->add_component<Stamina>(100);
         if (isPredator)
