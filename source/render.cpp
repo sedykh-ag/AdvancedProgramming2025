@@ -11,17 +11,20 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
 {
     int screenW, screenH;
     SDL_GetWindowSize(window, &screenW, &screenH);
-    // search of camera component
-    std::shared_ptr<Camera2D> camera2d = nullptr;
-    std::shared_ptr<Transform2D> camera_transform = nullptr;
-    for (const auto& object : world.get_objects()) {
-        camera2d = object->get_component<Camera2D>();
-        camera_transform = object->get_component<Transform2D>();
-        if (camera2d && camera_transform)
-            break;
+
+    const auto &camera = world.camera;
+
+    // Draw cells
+    for (int i = 0; i < world.cells.transforms.size(); i++)
+    {
+        const auto &sprite = world.cells.sprites[i];
+        const auto &transform = world.cells.transforms[i];
+
+        SDL_FRect dst = to_camera_space(transform, camera.transform, camera.pixelsPerMeter);
+        dst.x += screenW / 2.0f;
+        dst.y += screenH / 2.0f;
+        DrawSprite(renderer, sprite, dst);
     }
-    if (!camera2d || !camera_transform)
-        return;
 
     // Draw background sprites
     for (const auto& object : world.get_objects()) {
@@ -32,7 +35,7 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
             continue;
         if (!sprite || !transform)
             continue;
-        SDL_FRect dst = to_camera_space(*transform, *camera_transform, *camera2d);
+        SDL_FRect dst = to_camera_space(*transform, camera.transform, camera.pixelsPerMeter);
         dst.x += screenW / 2;
         dst.y += screenH / 2;
         DrawSprite(renderer, *sprite, dst);
@@ -47,11 +50,23 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
             continue;
         if (!sprite || !transform)
             continue;
-        SDL_FRect dst = to_camera_space(*transform, *camera_transform, *camera2d);
+        SDL_FRect dst = to_camera_space(*transform, camera.transform, camera.pixelsPerMeter);
         dst.x += screenW / 2;
         dst.y += screenH / 2;
         DrawSprite(renderer, *sprite, dst);
     }
+
+    for (int i = 0; i < world.characters.transforms.size(); i++) {
+        const auto &sprite = world.characters.sprites[i];
+        const auto &transform = world.characters.transforms[i];
+
+        SDL_FRect dst = to_camera_space(transform, camera.transform, camera.pixelsPerMeter);
+        dst.x += screenW / 2.0f;
+        dst.y += screenH / 2.0f;
+        DrawSprite(renderer, sprite, dst);
+    }
+
+
     // Draw bars without textures and without OOP
     float grayColor[4] = {0.2f, 0.2f, 0.2f, 1.f};
     float healthColor[4] = {0.91f, 0.27f, 0.22f, 1.f};
@@ -70,7 +85,7 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
         {
             Transform2D barTransform = *transform;
             barTransform.sizeX *= 0.1f;
-            SDL_FRect dst = to_camera_space(barTransform, *camera_transform, *camera2d);
+            SDL_FRect dst = to_camera_space(barTransform, camera.transform, camera.pixelsPerMeter);
             dst.x += screenW / 2;
             dst.y += screenH / 2;
             backBars.push_back(dst);
@@ -84,7 +99,7 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
             Transform2D barTransform = *transform;
             barTransform.x += barTransform.sizeX * 0.9f;
             barTransform.sizeX *= 0.1f;
-            SDL_FRect dst = to_camera_space(barTransform, *camera_transform, *camera2d);
+            SDL_FRect dst = to_camera_space(barTransform, camera.transform, camera.pixelsPerMeter);
             dst.x += screenW / 2;
             dst.y += screenH / 2;
             backBars.push_back(dst);

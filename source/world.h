@@ -1,10 +1,15 @@
 #pragma once
 
+#include "dungeon_generator.h"
 #include "game_object.h"
+#include "archetypes.h"
+#include "systems.h"
 #include <memory>
 #include <vector>
 
-
+const int LevelWidth = 120;
+const int LevelHeight = 50;
+const int RoomAttempts = 100;
 
 class World : public std::enable_shared_from_this<World> {
 public:
@@ -20,6 +25,8 @@ public:
     }
 
     void update(float dt) {
+        hero_input_system(*this, dt);
+
         for (auto& obj : delayedRemove)
             objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
         delayedRemove.clear();
@@ -35,6 +42,11 @@ public:
     const std::vector<std::shared_ptr<GameObject>>& get_objects() const {
         return objects;
     }
+
+    Dungeon dungeon{LevelWidth, LevelHeight, RoomAttempts};
+    Camera camera;
+    Cells cells;
+    Characters characters;
 
 private:
     std::vector<std::shared_ptr<GameObject>> objects, delayedRemove, delayedAdd;

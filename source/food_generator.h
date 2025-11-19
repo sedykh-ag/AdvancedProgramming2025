@@ -2,7 +2,6 @@
 
 #include "game_object.h"
 #include "math2d.h"
-#include "food.h"
 #include "dungeon_generator.h"
 
 
@@ -14,14 +13,14 @@ public:
 
 class FoodGenerator : public Component {
 private:
-    std::shared_ptr<Dungeon> dungeon;
+    Dungeon &dungeon;
     std::vector<std::unique_ptr<IFoodFabrique>> fabriques;
     float timeSinceLastSpawn = 0.f; // seconds between spawns
     float spawnInterval = 1.f;
     int fabriquesProbabilitySum = 0;
 public:
 
-    FoodGenerator(std::shared_ptr<Dungeon> dungeon, std::vector<std::unique_ptr<IFoodFabrique>> fabriques, float spawnInterval)
+    FoodGenerator(Dungeon &dungeon, std::vector<std::unique_ptr<IFoodFabrique>> fabriques, float spawnInterval)
         : dungeon(dungeon), fabriques(std::move(fabriques)), spawnInterval(spawnInterval)
     {
         for (const auto& fabrique : this->fabriques)
@@ -30,7 +29,7 @@ public:
 
     void generate_random_food()
     {
-        auto position = dungeon->getRandomFloorPosition();
+        auto position = dungeon.getRandomFloorPosition();
         int rand_value = rand() % fabriquesProbabilitySum;
         for (const auto& fabrique : fabriques) {
             if (rand_value < fabrique->weight()) {
