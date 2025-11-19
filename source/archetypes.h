@@ -23,6 +23,7 @@ struct Characters {
     std::vector<Transform2D> transforms;
     std::vector<Health> healths;
     std::vector<Stamina> staminas;
+    std::vector<float> timeSinceLastMove;
 
     std::vector<uint8_t> isHero;
     std::vector<uint8_t> isPredator;
