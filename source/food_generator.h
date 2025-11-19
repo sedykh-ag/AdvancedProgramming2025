@@ -1,44 +1,45 @@
 #pragma once
 
-#include "game_object.h"
-#include "math2d.h"
+#include "archetypes.h"
 #include "dungeon_generator.h"
 
-
-class IFoodFabrique : public Component {
-public:
-    virtual GameObjectPtr create_food(int2 position) = 0;
-    virtual int weight() const = 0; // for weighted random selection
-};
 
 class FoodGenerator : public Component {
 private:
     Dungeon &dungeon;
-    std::vector<std::unique_ptr<IFoodFabrique>> fabriques;
+    const FoodFabriques &fabriques;
+    Foods &foods;
     float timeSinceLastSpawn = 0.f; // seconds between spawns
     float spawnInterval = 1.f;
     int fabriquesProbabilitySum = 0;
 public:
 
-    FoodGenerator(Dungeon &dungeon, std::vector<std::unique_ptr<IFoodFabrique>> fabriques, float spawnInterval)
-        : dungeon(dungeon), fabriques(std::move(fabriques)), spawnInterval(spawnInterval)
+    FoodGenerator(Dungeon &dungeon, const FoodFabriques &fabriques, Foods &foods, float spawnInterval)
+        : dungeon(dungeon), fabriques(fabriques), foods(foods), spawnInterval(spawnInterval)
     {
-        for (const auto& fabrique : this->fabriques)
-            fabriquesProbabilitySum += fabrique->weight();
+        for (const int weight : fabriques.weightValue)
+            fabriquesProbabilitySum += weight;
     }
 
     void generate_random_food()
     {
-        auto position = dungeon.getRandomFloorPosition();
+        int2 position = dungeon.getRandomFloorPosition();
         int rand_value = rand() % fabriquesProbabilitySum;
-        for (const auto& fabrique : fabriques) {
-            if (rand_value < fabrique->weight()) {
-                fabrique->create_food(position);
+
+        for (int i = 0; i < fabriques.weightValue.size(); i++) {
+            int weight = fabriques.weightValue[i];
+            if (rand_value < weight) {
+                auto &sprite = fabriques.sprites[i];
+                int healthRestore = fabriques.healthRestore[i];
+                int staminaRestore = fabriques.staminaRestore[i];
+
+                foods.add(sprite, {(double)position.x, (double)position.y}, healthRestore, staminaRestore);
                 break;
             }
-            rand_value -= fabrique->weight();
+            rand_value -= weight;
         }
     }
+
     void on_update(float dt) override {
         timeSinceLastSpawn += dt;
         if (timeSinceLastSpawn >= spawnInterval) {

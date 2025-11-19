@@ -83,9 +83,45 @@ void npc_walk_system(World &world, float dt) {
 }
 
 void npc_predator_system(World &world) {
-
+    const float moveCooldown = 1.0f;
+    for (int i = 0; i < world.characters.transforms.size(); i++)
+    {
+        if (!world.characters.isPredator[i]) continue;
+        auto predatorTransform = world.characters.transforms[i];
+        for (int j = 0; j < world.characters.transforms.size(); j++)
+        {
+            auto victimTransform = world.characters.transforms[j];
+            if ((predatorTransform.x == victimTransform.x) && (predatorTransform.y == victimTransform.y)) {
+                auto predatorHealth = world.characters.healths[i];
+                auto victimHealth = world.characters.healths[j];
+                predatorHealth.current = std::min(predatorHealth.current + victimHealth.current, predatorHealth.max);
+                world.charactersDelayedRemove.push_back(j);
+            }
+            break; // consume only one victim at a time
+        }
+    }
 }
 
 void food_consume_system(World &world) {
+    for (size_t i = 0; i < world.characters.transforms.size(); i++)
+    {
+        if (world.characters.isPredator[i]) continue;
+        auto &characterTransform = world.characters.transforms[i];
+        for (size_t j = 0; j < world.foods.transforms.size(); j++)
+        {
+            const auto &foodTransform = world.foods.transforms[j];
+            if ((characterTransform.x == foodTransform.x) && (characterTransform.y == foodTransform.y)) {
+                auto &health = world.characters.healths[i];
+                auto &stamina = world.characters.staminas[i];
 
+                int healthRestore = world.foods.healthRestore[j];
+                int staminaRestore = world.foods.staminaRestore[j];
+
+                health.current = std::min(health.current + healthRestore, health.max);
+                stamina.current = std::min(stamina.current + staminaRestore, stamina.max);
+
+                world.foodsDelayedRemove.push_back(j);
+            }
+        }
+    }
 }

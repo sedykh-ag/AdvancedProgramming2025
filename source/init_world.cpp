@@ -1,5 +1,7 @@
-#include "world.h"
+#include <memory>
 
+#include "archetypes.h"
+#include "world.h"
 #include "image.h"
 #include "dungeon_generator.h"
 #include "transform2d.h"
@@ -12,11 +14,11 @@
 #include "starvation_system.h"
 #include "tiredness_system.h"
 
+
 const int BotPopulationCount = 100;
 const float PredatorProbability = 0.2f;
 const int InitialFoodAmount = 100;
 
-std::vector<std::unique_ptr<IFoodFabrique>> create_food_fabriques(World &world, TileSet &tileset);
 
 void init_world( SDL_Renderer* renderer, World& world)
 {
@@ -88,12 +90,19 @@ void init_world( SDL_Renderer* renderer, World& world)
         world.characters.isPredator.push_back(isPredator);
     }
 
-    // auto foodFabriques = create_food_fabriques(world, tileset);
+    {
+        world.foodFabriques.add(tileset.get_tile("health_small"), 10, 0, 100, 0);
+        world.foodFabriques.add(tileset.get_tile("health_large"), 25, 0, 30, 0);
+        world.foodFabriques.add(tileset.get_tile("stamina_small"), 0, 10, 35, 0);
+        world.foodFabriques.add(tileset.get_tile("stamina_large"), 0, 25, 20, 0);
+    }
 
-    // auto foodGenerator = world.create_object();
-    // auto generatorComp = foodGenerator->add_component<FoodGenerator>(dungeon, std::move(foodFabriques), 2.f / RoomAttempts);
-    // for (int i = 0; i < InitialFoodAmount; i++)
-    //     generatorComp->generate_random_food();
+    {
+        world.foodGenerator = std::make_unique<FoodGenerator>(world.dungeon, world.foodFabriques, world.foods, 2.0f / RoomAttempts);
+        for (int i = 0; i < InitialFoodAmount; i++)
+            world.foodGenerator->generate_random_food();
+    }
+
     // auto starvation = world.create_object();
     // starvation->add_component<StarvationSystem>();
     // auto tiredness = world.create_object();
