@@ -90,14 +90,15 @@ void npc_predator_system(World &world) {
         auto predatorTransform = world.characters.transforms[i];
         for (int j = 0; j < world.characters.transforms.size(); j++)
         {
+            if (world.characters.isPredator[j]) continue; // predators don't attack each other
             auto victimTransform = world.characters.transforms[j];
             if ((predatorTransform.x == victimTransform.x) && (predatorTransform.y == victimTransform.y)) {
-                auto predatorHealth = world.characters.healths[i];
-                auto victimHealth = world.characters.healths[j];
+                auto &predatorHealth = world.characters.healths[i];
+                const auto &victimHealth = world.characters.healths[j];
                 predatorHealth.current = std::min(predatorHealth.current + victimHealth.current, predatorHealth.max);
                 world.charactersDelayedRemove.push_back(j);
+                break; // consume only one victim at a time
             }
-            break; // consume only one victim at a time
         }
     }
 }
