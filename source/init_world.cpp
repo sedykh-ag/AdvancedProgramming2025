@@ -55,21 +55,24 @@ void init_world( SDL_Renderer* renderer, World& world)
                 spriteName = "wall";
             }
             if (spriteName) {
-                world.cells.sprites.push_back(tileset.get_tile(spriteName));
-                world.cells.transforms.push_back(Transform2D{(double)j, (double)i});
+                world.cells.add(
+                    tileset.get_tile(spriteName),
+                    {(double)j, (double)i}
+                );
             }
         }
 
     {
         auto heroPos = dungeon.getRandomFloorPosition();
-        world.characters.sprites.push_back(tileset.get_tile("knight"));
-        world.characters.transforms.push_back({(double)heroPos.x, (double)heroPos.y});
-        world.characters.healths.push_back(100);
-        world.characters.staminas.push_back(100);
-        world.characters.timeSinceLastMove.push_back(0.0f);
-        world.characters.isHero.push_back(true);
-        world.characters.isPredator.push_back(false);
-
+        world.characters.add(
+            tileset.get_tile("knight"),
+            {(double)heroPos.x, (double)heroPos.y},
+            100,
+            100,
+            0.0f,
+            true,
+            false
+        );
         world.camera.transform = {(double)heroPos.x, (double)heroPos.y};
     }
 
@@ -78,13 +81,15 @@ void init_world( SDL_Renderer* renderer, World& world)
         auto enemyPos = dungeon.getRandomFloorPosition();
         const bool isPredator = (rand() % 100) < int(PredatorProbability * 100.f);
 
-        world.characters.sprites.push_back(isPredator ? tileset.get_tile("ghost") : tileset.get_tile("peasant"));
-        world.characters.transforms.push_back({(double)enemyPos.x, (double)enemyPos.y});
-        world.characters.healths.push_back(100);
-        world.characters.staminas.push_back(100);
-        world.characters.timeSinceLastMove.push_back(0.0f);
-        world.characters.isHero.push_back(false);
-        world.characters.isPredator.push_back(isPredator);
+        world.characters.add(
+            isPredator ? tileset.get_tile("ghost") : tileset.get_tile("peasant"),
+            {(double)enemyPos.x, (double)enemyPos.y},
+            100,
+            100,
+            0,
+            false,
+            isPredator
+        );
     }
 
     {
