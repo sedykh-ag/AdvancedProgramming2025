@@ -29,11 +29,17 @@ public:
 
     void update(float dt) {
         std::sort(charactersDelayedRemove.begin(), charactersDelayedRemove.end(), std::greater<size_t>());
+        charactersDelayedRemove.erase(
+            std::unique(charactersDelayedRemove.begin(), charactersDelayedRemove.end()), charactersDelayedRemove.end()
+        );
         for (const size_t index : charactersDelayedRemove)
             characters.remove(index);
         charactersDelayedRemove.clear();
 
         std::sort(foodsDelayedRemove.begin(), foodsDelayedRemove.end(), std::greater<size_t>());
+        foodsDelayedRemove.erase(
+            std::unique(foodsDelayedRemove.begin(), foodsDelayedRemove.end()), foodsDelayedRemove.end()
+        );
         for (const size_t index : foodsDelayedRemove)
             foods.remove(index);
         foodsDelayedRemove.clear();
