@@ -3,8 +3,6 @@
 #include "world.h"
 #include "camera2d.h"
 #include "sprite.h"
-#include "health.h"
-#include "stamina.h"
 #include <SDL3/SDL_render.h>
 
 
@@ -57,35 +55,36 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
     std::vector<SDL_FRect> backBars;
     std::vector<SDL_FRect> healthBars;
     std::vector<SDL_FRect> staminaBars;
-    for (const auto& object : world.get_objects()) {
-        auto transform = object->get_component<Transform2D>();
-        auto health = object->get_component<Health>();
-        auto stamina = object->get_component<Stamina>();
-        if (!transform)
-            continue;
-        if (health)
+
+    for (size_t i = 0; i < world.characters.transforms.size(); i++) {
+        const auto &transform = world.characters.transforms[i];
+        const auto &health = world.characters.healths[i];
+        const auto &stamina = world.characters.staminas[i];
+
+        // health
         {
-            Transform2D barTransform = *transform;
+            Transform2D barTransform = transform;
             barTransform.sizeX *= 0.1f;
             SDL_FRect dst = to_camera_space(barTransform, camera.transform, camera.pixelsPerMeter);
-            dst.x += screenW / 2;
-            dst.y += screenH / 2;
+            dst.x += screenW / 2.0f;
+            dst.y += screenH / 2.0f;
             backBars.push_back(dst);
-            const float value = float(health->current) / float(health->max);
+            const float value = float(health.current) / float(health.max);
             dst.y += (1.f - value) * dst.h;
             dst.h *= value;
             healthBars.push_back(dst);
         }
-        if (stamina)
+
+        // stamina
         {
-            Transform2D barTransform = *transform;
+            Transform2D barTransform = transform;
             barTransform.x += barTransform.sizeX * 0.9f;
             barTransform.sizeX *= 0.1f;
             SDL_FRect dst = to_camera_space(barTransform, camera.transform, camera.pixelsPerMeter);
-            dst.x += screenW / 2;
-            dst.y += screenH / 2;
+            dst.x += screenW / 2.0f;
+            dst.y += screenH / 2.0f;
             backBars.push_back(dst);
-            const float value = float(stamina->current) / float(stamina->max);
+            const float value = float(stamina.current) / float(stamina.max);
             dst.y += (1.f - value) * dst.h;
             dst.h *= value;
             staminaBars.push_back(dst);

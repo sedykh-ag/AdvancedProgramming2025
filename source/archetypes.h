@@ -9,11 +9,6 @@
 #include "transform2d.h"
 
 
-struct Camera {
-    float pixelsPerMeter{32.0f};
-    Transform2D transform{0.0, 0.0};
-};
-
 struct Cells {
     std::vector<Sprite> sprites;
     std::vector<Transform2D> transforms;

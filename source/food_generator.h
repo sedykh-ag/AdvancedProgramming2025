@@ -4,7 +4,7 @@
 #include "dungeon_generator.h"
 
 
-class FoodGenerator : public Component {
+class FoodGenerator {
 private:
     Dungeon &dungeon;
     const FoodFabriques &fabriques;
@@ -40,7 +40,7 @@ public:
         }
     }
 
-    void on_update(float dt) override {
+    void on_update(float dt) {
         timeSinceLastSpawn += dt;
         if (timeSinceLastSpawn >= spawnInterval) {
             timeSinceLastSpawn = 0.f;

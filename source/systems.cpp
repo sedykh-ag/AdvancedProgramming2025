@@ -125,3 +125,39 @@ void food_consume_system(World &world) {
         }
     }
 }
+
+void starvation_system(World &world, float dt) {
+    static float accumulator = 0.0f;
+    const float damageInterval = 1.0f; // seconds
+    const int damageAmount = 2; // health points
+
+    accumulator += dt;
+    if (accumulator < damageInterval) return;
+        accumulator -= damageInterval;
+
+
+    for (size_t i = 0; i < world.characters.healths.size(); i++)
+    {
+        auto &health = world.characters.healths[i];
+        health.current = std::max(health.current - damageAmount, 0);
+
+        if (health.current <= 0)
+            world.charactersDelayedRemove.push_back(i);
+    }
+}
+
+void tiredness_system(World &world, float dt) {
+    static float accumulator = 0.0f;
+    const float tirednessInterval = 1.0f; // seconds
+    const int tirednessAmount = 5; // stamina points
+
+    accumulator += dt;
+    if (accumulator < tirednessInterval) return;
+        accumulator -= tirednessInterval;
+
+    for (size_t i = 0; i < world.characters.staminas.size(); i++)
+    {
+        auto &stamina = world.characters.staminas[i];
+        stamina.current = std::max(stamina.current - tirednessAmount, 0);
+    }
+}
