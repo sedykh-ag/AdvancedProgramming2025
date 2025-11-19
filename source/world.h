@@ -25,14 +25,15 @@ public:
     }
 
     void update(float dt) {
-        hero_input_system(*this, dt);
-
         for (auto& obj : delayedRemove)
             objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
         delayedRemove.clear();
         for (auto& obj : delayedAdd)
             objects.push_back(obj);
         delayedAdd.clear();
+
+        hero_input_system(*this, dt);
+        npc_walk_system(*this, dt);
 
         for (auto& obj : objects) {
             obj->update(dt);
