@@ -3,11 +3,9 @@
 #include "transform2d.h"
 #include <SDL3/SDL_rect.h>
 
-class Camera2D : public Component {
-public:
-    float pixelsPerMeter;
-    Camera2D(float pixelsPerMeter)
-        : pixelsPerMeter(pixelsPerMeter) {}
+struct Camera {
+    float pixelsPerMeter{32.0f};
+    Transform2D transform{0.0, 0.0};
 };
 
 inline SDL_FRect to_camera_space(const Transform2D& object_transform, const Transform2D& camera_transform, const float pixelsPerMeter) {

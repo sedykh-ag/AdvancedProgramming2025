@@ -1,3 +1,4 @@
+#include <iostream>
 #include <memory>
 
 #include "archetypes.h"
@@ -9,10 +10,6 @@
 #include "world.h"
 #include "tileset.h"
 #include "food_generator.h"
-#include "health.h"
-#include "stamina.h"
-#include "starvation_system.h"
-#include "tiredness_system.h"
 
 
 const int BotPopulationCount = 100;
@@ -102,9 +99,4 @@ void init_world( SDL_Renderer* renderer, World& world)
         for (int i = 0; i < InitialFoodAmount; i++)
             world.foodGenerator->generate_random_food();
     }
-
-    // auto starvation = world.create_object();
-    // starvation->add_component<StarvationSystem>();
-    // auto tiredness = world.create_object();
-    // tiredness->add_component<TirednessSystem>();
 }
