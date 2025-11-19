@@ -1,9 +1,9 @@
 #pragma once
 #include "game_object.h"
 #include "restrictor.h"
+#include "transform2d.h"
 #include "stamina.h"
 #include <SDL3/SDL.h>
-#include <algorithm>
 
 class Hero : public Component {
 private:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "component.h"
+#include "food.h"
 #include "world.h"
 
 class FoodConsumer : public Component {

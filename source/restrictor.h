@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game_object.h"
+#include "component.h"
 #include "math2d.h"
 
 class IRestrictor : public Component {
