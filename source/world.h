@@ -1,15 +1,18 @@
 #pragma once
 
 #include "dungeon_generator.h"
+#include "food_generator.h"
 #include "game_object.h"
 #include "archetypes.h"
 #include "systems.h"
 #include <memory>
 #include <vector>
 
+
 const int LevelWidth = 120;
 const int LevelHeight = 50;
 const int RoomAttempts = 100;
+
 
 class World : public std::enable_shared_from_this<World> {
 public:
@@ -25,19 +28,21 @@ public:
     }
 
     void update(float dt) {
-        for (auto& obj : delayedRemove)
-            objects.erase(std::remove(objects.begin(), objects.end(), obj), objects.end());
-        delayedRemove.clear();
-        for (auto& obj : delayedAdd)
-            objects.push_back(obj);
-        delayedAdd.clear();
+        std::sort(charactersDelayedRemove.begin(), charactersDelayedRemove.end(), std::greater<size_t>());
+        for (const size_t index : charactersDelayedRemove)
+            characters.remove(index);
+        charactersDelayedRemove.clear();
 
+        std::sort(foodsDelayedRemove.begin(), foodsDelayedRemove.end(), std::greater<size_t>());
+        for (const size_t index : foodsDelayedRemove)
+            foods.remove(index);
+        foodsDelayedRemove.clear();
+
+        foodGenerator->on_update(dt);
         hero_input_system(*this, dt);
         npc_walk_system(*this, dt);
-
-        for (auto& obj : objects) {
-            obj->update(dt);
-        }
+        npc_predator_system(*this);
+        food_consume_system(*this);
     }
 
     const std::vector<std::shared_ptr<GameObject>>& get_objects() const {
@@ -47,7 +52,15 @@ public:
     Dungeon dungeon{LevelWidth, LevelHeight, RoomAttempts};
     Camera camera;
     Cells cells;
+
     Characters characters;
+    std::vector<size_t> charactersDelayedRemove;
+
+    Foods foods;
+    std::vector<size_t> foodsDelayedRemove;
+
+    FoodFabriques foodFabriques;
+    std::unique_ptr<FoodGenerator> foodGenerator;
 
 private:
     std::vector<std::shared_ptr<GameObject>> objects, delayedRemove, delayedAdd;

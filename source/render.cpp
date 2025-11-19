@@ -1,11 +1,12 @@
 
+#include "transform2d.h"
 #include "world.h"
 #include "camera2d.h"
 #include "sprite.h"
 #include "health.h"
 #include "stamina.h"
-#include "background_tag.h"
 #include <SDL3/SDL_render.h>
+
 
 void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
 {
@@ -15,8 +16,7 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
     const auto &camera = world.camera;
 
     // Draw cells
-    for (int i = 0; i < world.cells.transforms.size(); i++)
-    {
+    for (int i = 0; i < world.cells.transforms.size(); i++) {
         const auto &sprite = world.cells.sprites[i];
         const auto &transform = world.cells.transforms[i];
 
@@ -26,36 +26,18 @@ void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world)
         DrawSprite(renderer, sprite, dst);
     }
 
-    // Draw background sprites
-    for (const auto& object : world.get_objects()) {
-        auto sprite = object->get_component<Sprite>();
-        auto transform = object->get_component<Transform2D>();
-        auto bgTag = object->get_component<BackGroundTag>();
-        if (!bgTag)
-            continue;
-        if (!sprite || !transform)
-            continue;
-        SDL_FRect dst = to_camera_space(*transform, camera.transform, camera.pixelsPerMeter);
-        dst.x += screenW / 2;
-        dst.y += screenH / 2;
-        DrawSprite(renderer, *sprite, dst);
+    // Draw food
+    for (int i = 0; i < world.foods.transforms.size(); i++) {
+        const auto &sprite = world.foods.sprites[i];
+        const auto &transform = world.foods.transforms[i];
+
+        SDL_FRect dst = to_camera_space(transform, camera.transform, camera.pixelsPerMeter);
+        dst.x += screenW / 2.0f;
+        dst.y += screenH / 2.0f;
+        DrawSprite(renderer, sprite, dst);
     }
 
-    // Draw foreground sprites
-    for (const auto& object : world.get_objects()) {
-        auto sprite = object->get_component<Sprite>();
-        auto transform = object->get_component<Transform2D>();
-        auto bgTag = object->get_component<BackGroundTag>();
-        if (bgTag)
-            continue;
-        if (!sprite || !transform)
-            continue;
-        SDL_FRect dst = to_camera_space(*transform, camera.transform, camera.pixelsPerMeter);
-        dst.x += screenW / 2;
-        dst.y += screenH / 2;
-        DrawSprite(renderer, *sprite, dst);
-    }
-
+    // Draw characters
     for (int i = 0; i < world.characters.transforms.size(); i++) {
         const auto &sprite = world.characters.sprites[i];
         const auto &transform = world.characters.transforms[i];
