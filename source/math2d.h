@@ -10,6 +10,10 @@ struct int2 {
     bool operator==(const int2& other) const {
         return x == other.x && y == other.y;
     }
+
+    int2 operator-(const int2& other) const {
+        return int2{x - other.x, y - other.y};
+    }
 };
 
 namespace std {
@@ -28,3 +32,5 @@ struct float2 {
     float x, y;
     float2(float x=0, float y=0) : x(x), y(y) {}
 };
+
+int dist(const int2 p, const int2 q);

@@ -47,9 +47,7 @@ std::vector<int2> astar(Grid grid, const std::unordered_set<int2> &obstacles, in
         return path;
     }
 
-    auto heuristic = [&goal](const int2& p) {
-        return std::abs(p.x - goal.x) + std::abs(p.y - goal.y);
-    };
+    auto heuristic = [&goal](const int2& p) { return dist(p, goal); };
 
     std::priority_queue<AStarNode, std::vector<AStarNode>, AStarNodeCompare> open;
 
