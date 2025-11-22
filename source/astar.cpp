@@ -2,10 +2,10 @@
 #include <vector>
 #include <queue>
 #include <limits>
-#include <cstdlib> // std::abs
 
 #include "math2d.h"
 #include "astar.h"
+
 
 struct AStarNode {
     int2 pos;
