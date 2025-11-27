@@ -14,16 +14,19 @@ StateMachine::~StateMachine() {
     transitions.clear();
 }
 
-void StateMachine::act() {
-    for (const auto &transition : transitions[curStateIndex])
-        if (transition.first->isAvailable()) {
-            states[curStateIndex]->on_exit();
-            curStateIndex = transition.second;
-            states[curStateIndex]->on_enter();
-            break;
-        }
+void StateMachine::act(int entity_idx, World &world, float dt) {
+    if (!transitions.empty()) {
+        for (const auto &transition : transitions[curStateIndex])
+            if (transition.first->isAvailable(entity_idx, world)) {
+                states[curStateIndex]->on_exit(entity_idx, world);
+                curStateIndex = transition.second;
+                states[curStateIndex]->on_enter(entity_idx, world);
+                break;
+            }
+    }
 
-    states[curStateIndex]->act();
+    if (!states.empty())
+        states[curStateIndex]->act(entity_idx, world, dt);
 }
 
 int StateMachine::addState(State *state) {

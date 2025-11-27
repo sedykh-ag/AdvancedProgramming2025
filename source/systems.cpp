@@ -1,25 +1,23 @@
-#include <unordered_set>
-
-#include "astar.h"
 #include "dungeon_generator.h"
 #include "stamina.h"
 #include "world.h"
 #include "math2d.h"
 #include "systems.h"
+#include "fsm.h"
 
 
-static float character_speed(const Stamina &stamina) {
+float character_speed(const Stamina &stamina) {
     return 5.0f + ((stamina.current <= 0.0f) ? 0.0f : 5.0f);
 }
 
-static bool character_can_pass(const Dungeon &dungeon, const int2 p) {
+bool character_can_pass(const Dungeon &dungeon, const int2 p) {
     const auto &grid = dungeon.getGrid();
     if (p.x < 0 || p.y < 0 || p.y >= (int)grid.size() || p.x >= (int)grid[0].size())
         return false;
     return grid[p.y][p.x] == Dungeon::FLOOR;
 }
 
-static int2 locate_closest_food(const Foods &foods, const int2 start) {
+int2 locate_closest_food(const Foods &foods, const int2 start) {
     int2 closest = {-1, -1};
     int min_dist = std::numeric_limits<int>::max();
     for (const auto &transform : foods.transforms) {
@@ -64,26 +62,6 @@ void hero_input_system(World &world, float dt) {
             transform.y = newPos.y;
             world.camera.transform = transform;
         }
-
-        // print path to closest food
-        int2 start = newPos;
-        int2 goal = locate_closest_food(world.foods, start);
-
-        std::vector<int2> path = astar(world.dungeon.getGrid(), std::unordered_set<int2>{}, start, goal);
-
-        if (path.size() < 2) {
-            std::printf("could not find path\n");
-            continue;
-        }
-
-        int2 next = path[1];
-        int2 direction = next - start;
-        std::printf("from (%d, %d) to (%d, %d) dir: go ", start.x, start.y, goal.x, goal.y);
-        if (direction.x == -1) std::printf("left");
-        if (direction.x == 1) std::printf("right");
-        if (direction.y == -1) std::printf("up");
-        if (direction.y == 1) std::printf("down");
-        std::printf("\n");
     }
 }
 
@@ -139,6 +117,14 @@ void npc_predator_system(World &world) {
                 break; // consume only one victim at a time
             }
         }
+    }
+}
+
+void npc_sm_system(World &world, float dt) {
+    for (int i = 0; i < world.characters.transforms.size(); i++)
+    {
+        auto &sm = world.characters.stateMachines[i];
+        sm.act(i, world, dt);
     }
 }
 

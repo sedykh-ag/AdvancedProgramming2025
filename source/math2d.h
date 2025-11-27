@@ -34,3 +34,4 @@ struct float2 {
 };
 
 int dist(const int2 p, const int2 q);
+int norm(const int2 p);

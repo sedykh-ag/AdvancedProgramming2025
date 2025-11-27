@@ -1,5 +1,5 @@
 #include <unordered_set>
-#include <vector>
+#include <stack>
 #include <queue>
 #include <limits>
 
@@ -21,8 +21,8 @@ struct AStarNodeCompare {
     }
 };
 
-std::vector<int2> astar(Grid grid, const std::unordered_set<int2> &obstacles, int2 start, int2 goal) {
-    std::vector<int2> path;
+std::stack<int2> astar(const Grid &grid, const std::unordered_set<int2> &obstacles, int2 start, int2 goal) {
+    std::stack<int2> path;
 
     const int height = static_cast<int>(grid.size());
     if ((grid.size() == 0) || (grid[0].size() == 0)) {
@@ -80,17 +80,15 @@ std::vector<int2> astar(Grid grid, const std::unordered_set<int2> &obstacles, in
             // Reconstruct path
             int2 p = goal;
             while (!(p.x == start.x && p.y == start.y)) {
-                path.push_back(p);
+                path.push(p);
                 const int2& prev = cameFrom[p.y][p.x];
                 if (prev.x == -1 && prev.y == -1) {
                     // No path actually found
-                    path.clear();
-                    return path;
+                    return std::stack<int2>();
                 }
                 p = prev;
             }
-            path.push_back(start);
-            std::reverse(path.begin(), path.end());
+            path.push(start);
             return path;
         }
 
@@ -115,5 +113,5 @@ std::vector<int2> astar(Grid grid, const std::unordered_set<int2> &obstacles, in
     }
 
     // No path found
-    return path;
+    return std::stack<int2>();
 }
