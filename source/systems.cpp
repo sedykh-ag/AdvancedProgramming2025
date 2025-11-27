@@ -1,3 +1,4 @@
+#include "archetypes.h"
 #include "dungeon_generator.h"
 #include "stamina.h"
 #include "world.h"
@@ -27,6 +28,44 @@ int2 locate_closest_food(const Foods &foods, const int2 start) {
         if (d < min_dist) {
             min_dist = d;
             closest = food_pos;
+        }
+    }
+    return closest;
+}
+
+int2 locate_closest_predator(const Characters &chars, const int2 start) {
+    int2 closest = {-1, -1};
+    int min_dist = std::numeric_limits<int>::max();
+    for (int i = 0; i < chars.transforms.size(); i++) {
+        if (!chars.isPredator[i])
+            continue;
+
+        const auto& predatorTransform = chars.transforms[i];
+        int2 predatorPos{(int)predatorTransform.x, (int)predatorTransform.y};
+
+        int d = dist(start, predatorPos);
+        if (d < min_dist) {
+            min_dist = d;
+            closest = predatorPos;
+        }
+    }
+    return closest;
+}
+
+int2 locate_closest_peasant(const Characters &chars, const int2 start) {
+    int2 closest = {-1, -1};
+    int min_dist = std::numeric_limits<int>::max();
+    for (int i = 0; i < chars.transforms.size(); i++) {
+        if (chars.isPredator[i])
+            continue;
+
+        const auto& peasantTransform = chars.transforms[i];
+        int2 peasantPos{(int)peasantTransform.x, (int)peasantTransform.y};
+
+        int d = dist(start, peasantPos);
+        if (d < min_dist) {
+            min_dist = d;
+            closest = peasantPos;
         }
     }
     return closest;

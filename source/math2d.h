@@ -14,6 +14,12 @@ struct int2 {
     int2 operator-(const int2& other) const {
         return int2{x - other.x, y - other.y};
     }
+
+    int2 operator+(const int2& other) const {
+        return int2{x + other.x, y + other.y};
+    }
+
+    int2 normalize() const;
 };
 
 namespace std {

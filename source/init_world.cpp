@@ -25,6 +25,29 @@ static StateMachine get_peasant_sm() {
     int find = sm.addState(create_find_closest_food_state());
     int plan = sm.addState(create_plan_path_state());
     int execute = sm.addState(create_execute_planned_path_state());
+    int avoid = sm.addState(create_avoid_predators_state());
+
+    sm.addTransition(create_has_destination_transition(), find, plan);
+    sm.addTransition(create_has_path_transition(), plan, execute);
+    sm.addTransition(
+        create_negate_transition(create_has_path_transition()), execute, find
+    );
+
+    sm.addTransition(create_predator_close_transition(), find, avoid);
+    sm.addTransition(create_predator_close_transition(), plan, avoid);
+    sm.addTransition(create_predator_close_transition(), execute, avoid);
+
+    sm.addTransition(create_negate_transition(create_predator_close_transition()), avoid, find);
+
+    return sm;
+}
+
+static StateMachine get_predator_sm() {
+    StateMachine sm{};
+
+    int find = sm.addState(create_find_closest_peasant_state());
+    int plan = sm.addState(create_plan_path_state());
+    int execute = sm.addState(create_execute_planned_path_state());
 
     sm.addTransition(create_has_destination_transition(), find, plan);
     sm.addTransition(create_has_path_transition(), plan, execute);
@@ -33,10 +56,6 @@ static StateMachine get_peasant_sm() {
     );
 
     return sm;
-}
-
-static StateMachine get_predator_sm() {
-    return StateMachine{};
 }
 
 void init_world( SDL_Renderer* renderer, World& world)
