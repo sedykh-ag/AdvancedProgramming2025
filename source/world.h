@@ -36,8 +36,7 @@ public:
 
         foodGenerator->on_update(dt);
         hero_input_system(*this, dt);
-        // npc_walk_system(*this, dt);
-        // npc_predator_system(*this);
+        npc_predator_system(*this);
         food_consume_system(*this);
         starvation_system(*this, dt);
         tiredness_system(*this, dt);

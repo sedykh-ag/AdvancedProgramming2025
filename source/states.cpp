@@ -2,6 +2,7 @@
 #include <unordered_set>
 
 #include "math2d.h"
+#include "transform2d.h"
 #include "world.h"
 #include "fsm.h"
 #include "astar.h"
@@ -16,6 +17,17 @@ public:
         auto transform = world.characters.transforms[entity_idx];
         auto &destination = world.characters.destinations[entity_idx];
         destination = locate_closest_food(world.foods, {(int)transform.x, (int)transform.y});
+    }
+};
+
+class FindClosestPeasantState : public State {
+public:
+    void on_enter(int entity_idx, World &world) override { }
+    void on_exit(int entity_idx, World &world) override { }
+    void act(int entity_idx, World &world, float dt) override {
+        auto transform = world.characters.transforms[entity_idx];
+        auto &destination = world.characters.destinations[entity_idx];
+        destination = locate_closest_peasant(world.characters, {(int)transform.x, (int)transform.y});
     }
 };
 
@@ -47,11 +59,22 @@ public:
     }
 };
 
+bool can_move(Characters &chars, int entity_idx, float dt) {
+    const auto &stamina = chars.staminas[entity_idx];
+    float &timeSinceLastMove = chars.timeSinceLastMove[entity_idx];
+    timeSinceLastMove += dt * character_speed(stamina);
+    if (timeSinceLastMove < 1.0f)
+        return false;
+    timeSinceLastMove -= 1.0f;
+    return true;
+}
+
 class ExecutePlannedPathState : public State {
     const float moveCooldown = 1.0f;
 public:
     void on_enter(int entity_idx, World &world) override { }
     void on_exit(int entity_idx, World &world) override {
+        world.characters.destinations[entity_idx] = int2{-1,  -1};
         world.characters.paths[entity_idx] = std::stack<int2>();
     }
     void act(int entity_idx, World &world, float dt) override {
@@ -59,12 +82,8 @@ public:
         if (path.empty()) // reached the end of the path
             return;
 
-        auto &stamina = world.characters.staminas[entity_idx];
-        float &timeSinceLastMove = world.characters.timeSinceLastMove[entity_idx];
-        timeSinceLastMove += dt * character_speed(stamina);
-        if (timeSinceLastMove < 1.0f)
+        if (!can_move(world.characters, entity_idx, dt))
             return;
-        timeSinceLastMove -= 1.0f;
 
         auto &curTransform = world.characters.transforms[entity_idx];
         int2 curPos{(int)curTransform.x, (int)curTransform.y};
@@ -73,14 +92,44 @@ public:
         path.pop();
 
         assert(dist(curPos, newPos) <= 1);
+        assert(character_can_pass(world.dungeon, newPos) && "astar should never be wrong");
         curTransform = {(double)newPos.x, (double)newPos.y};
     }
 };
 
 class AvoidPredatorsState : public State {
-    void on_enter(int entity_idx, World &world) override { }
-    void on_exit(int entity_idx, World &world) override { }
-    void act(int entity_idx, World &world, float dt) override { }
+public:
+    void on_enter(int entity_idx, World &world) override {
+        world.characters.destinations[entity_idx] = int2{-1,  -1};
+        world.characters.paths[entity_idx] = std::stack<int2>{};
+    }
+    void on_exit(int entity_idx, World &world) override {
+        world.characters.destinations[entity_idx] = int2{-1,  -1};
+        world.characters.paths[entity_idx] = std::stack<int2>{};
+    }
+    void act(int entity_idx, World &world, float dt) override {
+        if (!can_move(world.characters, entity_idx, dt))
+            return;
+
+        auto &myTransform = world.characters.transforms[entity_idx];
+        int2 myPos = {(int)myTransform.x,(int) myTransform.y};
+
+        int2 closestPredatorPos = locate_closest_predator(world.characters, myPos);
+        int2 awayDirection = myPos - closestPredatorPos;
+
+        awayDirection = awayDirection.normalize();
+        // forbid diagonal movement
+        if (std::abs(awayDirection.x) + std::abs(awayDirection.y) > 1)
+            awayDirection.y = 0;
+
+        int2 newPos = myPos + awayDirection;
+        if (!character_can_pass(world.dungeon, newPos))
+            return;
+        assert(dist(myPos, newPos) <= 1);
+        auto newTransform = Transform2D{(double)newPos.x, (double)newPos.y};
+
+        myTransform = newTransform;
+    }
 };
 
 class NoopState : public State {
@@ -93,6 +142,10 @@ class NoopState : public State {
 // state creators
 State *create_find_closest_food_state() {
     return new FindClosestFoodState{};
+}
+
+State *create_find_closest_peasant_state() {
+    return new FindClosestPeasantState{};
 }
 
 State *create_plan_path_state() {
