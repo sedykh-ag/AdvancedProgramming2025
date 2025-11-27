@@ -10,12 +10,34 @@
 #include "world.h"
 #include "tileset.h"
 #include "food_generator.h"
+#include "fsm.h"
+#include "states.h"
+#include "transitions.h"
 
 
 const int BotPopulationCount = 100;
 const float PredatorProbability = 0.2f;
 const int InitialFoodAmount = 100;
 
+static StateMachine get_peasant_sm() {
+    StateMachine sm{};
+
+    int find = sm.addState(create_find_closest_food_state());
+    int plan = sm.addState(create_plan_path_state());
+    int execute = sm.addState(create_execute_planned_path_state());
+
+    sm.addTransition(create_has_destination_transition(), find, plan);
+    sm.addTransition(create_has_path_transition(), plan, execute);
+    sm.addTransition(
+        create_negate_transition(create_has_path_transition()), execute, find
+    );
+
+    return sm;
+}
+
+static StateMachine get_predator_sm() {
+    return StateMachine{};
+}
 
 void init_world( SDL_Renderer* renderer, World& world)
 {
@@ -70,6 +92,9 @@ void init_world( SDL_Renderer* renderer, World& world)
             100,
             100,
             0.0f,
+            StateMachine{},
+            {-1, -1},
+            std::stack<int2>{},
             true,
             false
         );
@@ -87,6 +112,9 @@ void init_world( SDL_Renderer* renderer, World& world)
             100,
             100,
             0,
+            isPredator ? get_predator_sm() : get_peasant_sm(),
+            {-1, -1},
+            std::stack<int2>{},
             false,
             isPredator
         );
