@@ -18,59 +18,6 @@ bool character_can_pass(const Dungeon &dungeon, const int2 p) {
     return grid[p.y][p.x] == Dungeon::FLOOR;
 }
 
-int2 locate_closest_food(const Foods &foods, const int2 start) {
-    int2 closest = {-1, -1};
-    int min_dist = std::numeric_limits<int>::max();
-    for (const auto &transform : foods.transforms) {
-        int2 food_pos{(int)transform.x, (int)transform.y};
-        int d = dist(start, food_pos);
-
-        if (d < min_dist) {
-            min_dist = d;
-            closest = food_pos;
-        }
-    }
-    return closest;
-}
-
-int2 locate_closest_predator(const Characters &chars, const int2 start) {
-    int2 closest = {-1, -1};
-    int min_dist = std::numeric_limits<int>::max();
-    for (int i = 0; i < chars.transforms.size(); i++) {
-        if (!chars.isPredator[i])
-            continue;
-
-        const auto& predatorTransform = chars.transforms[i];
-        int2 predatorPos{(int)predatorTransform.x, (int)predatorTransform.y};
-
-        int d = dist(start, predatorPos);
-        if (d < min_dist) {
-            min_dist = d;
-            closest = predatorPos;
-        }
-    }
-    return closest;
-}
-
-int2 locate_closest_peasant(const Characters &chars, const int2 start) {
-    int2 closest = {-1, -1};
-    int min_dist = std::numeric_limits<int>::max();
-    for (int i = 0; i < chars.transforms.size(); i++) {
-        if (chars.isPredator[i])
-            continue;
-
-        const auto& peasantTransform = chars.transforms[i];
-        int2 peasantPos{(int)peasantTransform.x, (int)peasantTransform.y};
-
-        int d = dist(start, peasantPos);
-        if (d < min_dist) {
-            min_dist = d;
-            closest = peasantPos;
-        }
-    }
-    return closest;
-}
-
 void hero_input_system(World &world, float dt) {
     for (int i = 0; i < world.characters.transforms.size(); i++)
     {

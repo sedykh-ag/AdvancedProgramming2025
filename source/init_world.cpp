@@ -18,6 +18,7 @@
 const int BotPopulationCount = 100;
 const float PredatorProbability = 0.2f;
 const int InitialFoodAmount = 100;
+extern const int PredatorCloseTriggerDist = 4;
 
 static StateMachine get_peasant_sm() {
     StateMachine sm{};

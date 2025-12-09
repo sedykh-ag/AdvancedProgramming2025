@@ -1,7 +1,9 @@
 #include "fsm.h"
 #include "math2d.h"
 #include "world.h"
+#include "shared_helpers.h"
 
+extern const int PredatorCloseTriggerDist;
 
 class HasDestinationTransition : public StateTransition {
 public:
@@ -19,13 +21,12 @@ public:
 
 class PredatorCloseTransition : public StateTransition {
 public:
-    const int triggerDist = 4;
     bool isAvailable(int entity_idx, World &world) const override {
         auto &myTransform = world.characters.transforms[entity_idx];
         int2 myPos = {(int)myTransform.x,(int) myTransform.y};
         int2 closestPredatorPos = locate_closest_predator(world.characters, myPos);
 
-        return dist(myPos, closestPredatorPos) <= triggerDist;
+        return dist(myPos, closestPredatorPos) <= PredatorCloseTriggerDist;
     }
 };
 
