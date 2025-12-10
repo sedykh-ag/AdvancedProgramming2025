@@ -81,6 +81,7 @@ struct Characters {
         stateMachines.erase(stateMachines.begin() + index);
         destinations.erase(destinations.begin() + index);
         paths.erase(paths.begin() + index);
+        behaviorTrees.erase(behaviorTrees.begin() + index);
         this->isHero.erase(this->isHero.begin() + index);
         this->isPredator.erase(this->isPredator.begin() + index);
     }
