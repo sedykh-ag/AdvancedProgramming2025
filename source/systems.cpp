@@ -114,6 +114,15 @@ void npc_sm_system(World &world, float dt) {
     }
 }
 
+void npc_bt_system(World &world, float dt) {
+    for (int i = 0; i < world.characters.transforms.size(); i++)
+    {
+        auto &bt = world.characters.behaviorTrees[i];
+        if (bt)
+            bt->tick(i, world, dt);
+    }
+}
+
 void food_consume_system(World &world) {
     for (size_t i = 0; i < world.characters.transforms.size(); i++)
     {

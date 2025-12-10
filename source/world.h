@@ -41,6 +41,7 @@ public:
         starvation_system(*this, dt);
         tiredness_system(*this, dt);
         npc_sm_system(*this, dt);
+        npc_bt_system(*this, dt);
     }
 
     Dungeon dungeon{LevelWidth, LevelHeight, RoomAttempts};

@@ -16,3 +16,4 @@ void food_consume_system(World &world);
 void starvation_system(World &world, float dt);
 void tiredness_system(World &world, float dt);
 void npc_sm_system(World &world, float dt);
+void npc_bt_system(World &world, float dt);

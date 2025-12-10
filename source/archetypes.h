@@ -11,6 +11,7 @@
 #include "transform2d.h"
 #include "fsm.h"
 #include "math2d.h"
+#include "bt.h"
 
 
 struct Cells {
@@ -40,6 +41,8 @@ struct Characters {
     std::vector<int2> destinations;
     std::vector<std::stack<int2>> paths;
 
+    std::vector<std::shared_ptr<RootNode>> behaviorTrees;
+
     std::vector<uint8_t> isHero;
     std::vector<uint8_t> isPredator;
 
@@ -52,6 +55,7 @@ struct Characters {
         StateMachine &&stateMachine,
         const int2 &destination,
         const std::stack<int2> &path,
+        std::shared_ptr<RootNode> behaviorTree,
         uint8_t isHero,
         uint8_t isPredator
     ) {
@@ -63,6 +67,7 @@ struct Characters {
         stateMachines.push_back(std::move(stateMachine));
         destinations.push_back(destination);
         paths.push_back(path);
+        behaviorTrees.push_back(behaviorTree);
         this->isHero.push_back(isHero);
         this->isPredator.push_back(isPredator);
     }
