@@ -5,7 +5,7 @@
 #include "math2d.h"
 #include "systems.h"
 #include "fsm.h"
-
+#include "init_world.h"
 
 float character_speed(const Stamina &stamina) {
     return 5.0f + ((stamina.current <= 0.0f) ? 0.0f : 5.0f);
@@ -154,9 +154,9 @@ void starvation_system(World &world, float dt) {
     const int damageAmount = 2; // health points
 
     accumulator += dt;
-    if (accumulator < damageInterval) return;
-        accumulator -= damageInterval;
-
+    if (accumulator < damageInterval)
+        return;
+    accumulator -= damageInterval;
 
     for (size_t i = 0; i < world.characters.healths.size(); i++)
     {
@@ -174,12 +174,68 @@ void tiredness_system(World &world, float dt) {
     const int tirednessAmount = 5; // stamina points
 
     accumulator += dt;
-    if (accumulator < tirednessInterval) return;
-        accumulator -= tirednessInterval;
+    if (accumulator < tirednessInterval)
+        return;
+    accumulator -= tirednessInterval;
 
     for (size_t i = 0; i < world.characters.staminas.size(); i++)
     {
         auto &stamina = world.characters.staminas[i];
         stamina.current = std::max(stamina.current - tirednessAmount, 0);
+    }
+}
+
+void reproduction_system(World &world, float dt) {
+    for (size_t i = 0; i < world.characters.transforms.size(); i++)
+    {
+        // hero can't reproduce
+        if (world.characters.isHero[i])
+            continue;
+
+        for (size_t j = 0; j < world.characters.transforms.size(); j++)
+        {
+            // can't reproduce with self
+            if (i == j)
+                continue;
+
+            // peasant and predator can't reproduce
+            if (world.characters.isPredator[i] != world.characters.isPredator[j])
+                continue;
+
+            bool isPredator = world.characters.isPredator[i];
+
+            // must be in the same place
+            auto &myTransform = world.characters.transforms[i];
+            auto &otherTransform = world.characters.transforms[j];
+            if ((myTransform.x != otherTransform.x) || (myTransform.y != otherTransform.y))
+                continue;
+
+            // must have > 90 health
+            auto &myHealth = world.characters.healths[i];
+            auto &otherHealth = world.characters.healths[j];
+            if ((myHealth.current <= 90) || (otherHealth.current <= 90))
+                continue;
+
+            assert(tilesetPtr);
+
+            int childHealth = (myHealth.current / 3) + (otherHealth.current / 3);
+            const int childMaxHealth = 100;
+            world.characters.add(
+                isPredator ? tilesetPtr->get_tile("ghost") : tilesetPtr->get_tile("peasant"),
+                {(double)myTransform.x, (double)myTransform.y},
+                {childHealth, childMaxHealth},
+                100,
+                0,
+                isPredator ? get_predator_sm() : get_peasant_sm(),
+                {-1, -1},
+                std::stack<int2>{},
+                isPredator ? get_predator_bt() : get_peasant_bt(),
+                false,
+                isPredator
+            );
+
+            myHealth.current = (2 * myHealth.current) / 3;
+            otherHealth.current = (2 * otherHealth.current) / 3;
+        }
     }
 }

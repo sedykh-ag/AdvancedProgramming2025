@@ -15,14 +15,15 @@
 #include "transitions.h"
 #include "shared_helpers.h"
 #include "bt.h"
+#include "init_world.h"
 
 
-const int BotPopulationCount = 100;
+const int BotPopulationCount = 15;
 const float PredatorProbability = 0.2f;
-const int InitialFoodAmount = 100;
+const int InitialFoodAmount = 10;
 extern const int PredatorCloseTriggerDist = 4;
 
-static StateMachine get_peasant_sm() {
+StateMachine get_peasant_sm() {
     StateMachine sm{};
 
     int find = sm.addState(create_find_closest_food_state());
@@ -45,7 +46,7 @@ static StateMachine get_peasant_sm() {
     return sm;
 }
 
-static StateMachine get_predator_sm() {
+StateMachine get_predator_sm() {
     StateMachine sm{};
 
     int find = sm.addState(create_find_closest_peasant_state());
@@ -61,7 +62,7 @@ static StateMachine get_predator_sm() {
     return sm;
 }
 
-static std::shared_ptr<RootNode> get_peasant_bt() {
+std::shared_ptr<RootNode> get_peasant_bt() {
     // conditions
     auto predatorClose = std::make_shared<ConditionNode>(
         [](int entity_idx, World &world, float) {
@@ -148,7 +149,7 @@ static std::shared_ptr<RootNode> get_peasant_bt() {
     return rootNode;
 }
 
-static std::shared_ptr<RootNode> get_predator_bt() {
+std::shared_ptr<RootNode> get_predator_bt() {
     // conditions
     auto hasPath = std::make_shared<ConditionNode>(
         [](int entity_idx, World &world, float) {
@@ -212,6 +213,8 @@ static std::shared_ptr<RootNode> get_predator_bt() {
     return rootNode;
 }
 
+std::unique_ptr<TileSet> tilesetPtr{nullptr};
+
 void init_world( SDL_Renderer* renderer, World& world)
 {
     const int tileSize = 16;
@@ -222,7 +225,8 @@ void init_world( SDL_Renderer* renderer, World& world)
         std::cerr << "Failed to load tilemap texture\n";
         return;
     }
-    TileSet tileset(tilemap);
+    tilesetPtr = std::make_unique<TileSet>(tilemap);
+
     // Возьмем несколько тайлов из тайлсета
     const std::vector<std::pair<int, int>> tileIndices = {
         {4, 0}, // dirty floor
@@ -251,7 +255,7 @@ void init_world( SDL_Renderer* renderer, World& world)
             }
             if (spriteName) {
                 world.cells.add(
-                    tileset.get_tile(spriteName),
+                    tilesetPtr->get_tile(spriteName),
                     {(double)j, (double)i}
                 );
             }
@@ -260,7 +264,7 @@ void init_world( SDL_Renderer* renderer, World& world)
     {
         auto heroPos = dungeon.getRandomFloorPosition();
         world.characters.add(
-            tileset.get_tile("knight"),
+            tilesetPtr->get_tile("knight"),
             {(double)heroPos.x, (double)heroPos.y},
             100,
             100,
@@ -281,7 +285,7 @@ void init_world( SDL_Renderer* renderer, World& world)
         const bool isPredator = (rand() % 100) < int(PredatorProbability * 100.f);
 
         world.characters.add(
-            isPredator ? tileset.get_tile("ghost") : tileset.get_tile("peasant"),
+            isPredator ? tilesetPtr->get_tile("ghost") : tilesetPtr->get_tile("peasant"),
             {(double)enemyPos.x, (double)enemyPos.y},
             100,
             100,
@@ -296,10 +300,10 @@ void init_world( SDL_Renderer* renderer, World& world)
     }
 
     {
-        world.foodFabriques.add(tileset.get_tile("health_small"), 10, 0, 100, 0);
-        world.foodFabriques.add(tileset.get_tile("health_large"), 25, 0, 30, 0);
-        world.foodFabriques.add(tileset.get_tile("stamina_small"), 0, 10, 35, 0);
-        world.foodFabriques.add(tileset.get_tile("stamina_large"), 0, 25, 20, 0);
+        world.foodFabriques.add(tilesetPtr->get_tile("health_small"), 10, 0, 100, 0);
+        world.foodFabriques.add(tilesetPtr->get_tile("health_large"), 25, 0, 30, 0);
+        world.foodFabriques.add(tilesetPtr->get_tile("stamina_small"), 0, 10, 35, 0);
+        world.foodFabriques.add(tilesetPtr->get_tile("stamina_large"), 0, 25, 20, 0);
     }
 
     {
