@@ -188,10 +188,6 @@ void tiredness_system(World &world, float dt) {
 void reproduction_system(World &world, float dt) {
     for (size_t i = 0; i < world.characters.transforms.size(); i++)
     {
-        // hero can't reproduce
-        if (world.characters.isHero[i])
-            continue;
-
         for (size_t j = 0; j < world.characters.transforms.size(); j++)
         {
             // can't reproduce with self
@@ -220,6 +216,10 @@ void reproduction_system(World &world, float dt) {
 
             int childHealth = (myHealth.current / 3) + (otherHealth.current / 3);
             const int childMaxHealth = 100;
+
+            myHealth.current = (2 * myHealth.current) / 3;
+            otherHealth.current = (2 * otherHealth.current) / 3;
+
             world.characters.add(
                 isPredator ? tilesetPtr->get_tile("ghost") : tilesetPtr->get_tile("peasant"),
                 {(double)myTransform.x, (double)myTransform.y},
@@ -233,9 +233,6 @@ void reproduction_system(World &world, float dt) {
                 false,
                 isPredator
             );
-
-            myHealth.current = (2 * myHealth.current) / 3;
-            otherHealth.current = (2 * otherHealth.current) / 3;
         }
     }
 }

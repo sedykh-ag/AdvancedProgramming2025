@@ -32,6 +32,9 @@ int2 locate_closest_predator(const Characters &chars, const int2 start) {
         const auto& predatorTransform = chars.transforms[i];
         int2 predatorPos{(int)predatorTransform.x, (int)predatorTransform.y};
 
+        if (predatorPos == start)
+            continue;
+
         int d = dist(start, predatorPos);
         if (d < min_dist) {
             min_dist = d;
@@ -50,6 +53,9 @@ int2 locate_closest_peasant(const Characters &chars, const int2 start) {
 
         const auto& peasantTransform = chars.transforms[i];
         int2 peasantPos{(int)peasantTransform.x, (int)peasantTransform.y};
+
+        if (peasantPos == start)
+            continue;
 
         int d = dist(start, peasantPos);
         if (d < min_dist) {
@@ -71,6 +77,13 @@ bool find_closest_peasant(int entity_idx, World &world) {
     auto transform = world.characters.transforms[entity_idx];
     auto &destination = world.characters.destinations[entity_idx];
     destination = locate_closest_peasant(world.characters, {(int)transform.x, (int)transform.y});
+    return destination != int2{-1, -1};
+}
+
+bool find_closest_predator(int entity_idx, World &world) {
+    auto transform = world.characters.transforms[entity_idx];
+    auto &destination = world.characters.destinations[entity_idx];
+    destination = locate_closest_predator(world.characters, {(int)transform.x, (int)transform.y});
     return destination != int2{-1, -1};
 }
 

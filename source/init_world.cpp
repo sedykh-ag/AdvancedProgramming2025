@@ -18,9 +18,9 @@
 #include "init_world.h"
 
 
-const int BotPopulationCount = 15;
+const int BotPopulationCount = 100;
 const float PredatorProbability = 0.2f;
-const int InitialFoodAmount = 10;
+const int InitialFoodAmount = 100;
 extern const int PredatorCloseTriggerDist = 4;
 
 StateMachine get_peasant_sm() {
@@ -116,6 +116,18 @@ std::shared_ptr<RootNode> get_peasant_bt() {
         },
         "findClosestFood"
     );
+
+    auto findClosestPeasantMate = std::make_shared<ActionNode>(
+        [](int entity_idx, World &world, float dt) {
+            if (world.characters.healths[entity_idx].current <= 90)
+                return Status::FAILURE;
+
+            bool found = find_closest_peasant(entity_idx, world);
+            return found ? Status::SUCCESS : Status::FAILURE;
+        },
+        "findClosestPeasantMate"
+    );
+
     auto planPath = std::make_shared<ActionNode>(
         [](int entity_idx, World &world, float dt) {
             bool planned = plan_path(entity_idx, world);
@@ -136,7 +148,11 @@ std::shared_ptr<RootNode> get_peasant_bt() {
     tryMovingAlongPath->addChild(hasPath);
     tryMovingAlongPath->addChild(stepAlongPath);
 
-    tryPlanNewPath->addChild(findClosestFood);
+    auto findDestination = std::make_shared<SelectorNode>("findDestination");
+    findDestination->addChild(findClosestPeasantMate);
+    findDestination->addChild(findClosestFood);
+
+    tryPlanNewPath->addChild(findDestination);
     tryPlanNewPath->addChild(planPath);
 
     // root selector
@@ -186,6 +202,18 @@ std::shared_ptr<RootNode> get_predator_bt() {
         },
         "findClosestPeasant"
     );
+
+    auto findClosestPredatorMate = std::make_shared<ActionNode>(
+        [](int entity_idx, World &world, float dt) {
+            if (world.characters.healths[entity_idx].current <= 90)
+                return Status::FAILURE;
+
+            bool found = find_closest_predator(entity_idx, world);
+            return found ? Status::SUCCESS : Status::FAILURE;
+        },
+        "findClosestPredatorMate"
+    );
+
     auto planPath = std::make_shared<ActionNode>(
         [](int entity_idx, World &world, float dt) {
             bool planned = plan_path(entity_idx, world);
@@ -201,7 +229,11 @@ std::shared_ptr<RootNode> get_predator_bt() {
     tryMovingAlongPath->addChild(hasPath);
     tryMovingAlongPath->addChild(stepAlongPath);
 
-    tryPlanNewPath->addChild(findClosestPeasant);
+    auto findDestination = std::make_shared<SelectorNode>("findDestination");
+    findDestination->addChild(findClosestPredatorMate);
+    findDestination->addChild(findClosestPredatorMate);
+
+    tryPlanNewPath->addChild(findDestination);
     tryPlanNewPath->addChild(planPath);
 
     // root selector
