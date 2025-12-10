@@ -98,9 +98,12 @@ static std::shared_ptr<RootNode> get_peasant_bt() {
 
     auto stepAlongPath = std::make_shared<ActionNode>(
         [](int entity_idx, World &world, float dt) {
-            execute_planned_path(entity_idx, world, dt);
             const auto &path = world.characters.paths[entity_idx];
-            return path.empty() ? Status::SUCCESS : Status::RUNNING;
+            if (path.empty())
+                return Status::FAILURE;
+
+            execute_planned_path(entity_idx, world, dt);
+            return Status::SUCCESS;
         },
         "stepAlongPath"
     );
@@ -146,7 +149,67 @@ static std::shared_ptr<RootNode> get_peasant_bt() {
 }
 
 static std::shared_ptr<RootNode> get_predator_bt() {
-    return nullptr;
+    // conditions
+    auto hasPath = std::make_shared<ConditionNode>(
+        [](int entity_idx, World &world, float) {
+            return !world.characters.paths[entity_idx].empty();
+        },
+        "hasPath"
+    );
+
+    // actions
+    auto resetPath = std::make_shared<ActionNode>(
+        [](int entity_idx, World &world, float dt) {
+            world.characters.paths[entity_idx] = std::stack<int2>();
+            return Status::SUCCESS;
+        },
+        "resetPath"
+    );
+
+    auto stepAlongPath = std::make_shared<ActionNode>(
+        [](int entity_idx, World &world, float dt) {
+            const auto &path = world.characters.paths[entity_idx];
+            if (path.empty())
+                return Status::FAILURE;
+
+            execute_planned_path(entity_idx, world, dt);
+            return Status::SUCCESS;
+        },
+        "stepAlongPath"
+    );
+
+    auto findClosestPeasant = std::make_shared<ActionNode>(
+        [](int entity_idx, World &world, float dt) {
+            bool found = find_closest_peasant(entity_idx, world);
+            return found ? Status::SUCCESS : Status::FAILURE;
+        },
+        "findClosestPeasant"
+    );
+    auto planPath = std::make_shared<ActionNode>(
+        [](int entity_idx, World &world, float dt) {
+            bool planned = plan_path(entity_idx, world);
+            return planned ? Status::SUCCESS : Status::FAILURE;
+        },
+        "planPath"
+    );
+
+    // sequences
+    auto tryMovingAlongPath = std::make_shared<SequenceNode>("tryMovingAlongPath");
+    auto tryPlanNewPath = std::make_shared<SequenceNode>("tryPlanNewPath");
+
+    tryMovingAlongPath->addChild(hasPath);
+    tryMovingAlongPath->addChild(stepAlongPath);
+
+    tryPlanNewPath->addChild(findClosestPeasant);
+    tryPlanNewPath->addChild(planPath);
+
+    // root selector
+    auto rootSelector = std::make_shared<SelectorNode>("rootSelector");
+    rootSelector->addChild(tryMovingAlongPath);
+    rootSelector->addChild(tryPlanNewPath);
+
+    auto rootNode = std::make_shared<RootNode>(rootSelector);
+    return rootNode;
 }
 
 void init_world( SDL_Renderer* renderer, World& world)
@@ -223,7 +286,7 @@ void init_world( SDL_Renderer* renderer, World& world)
             100,
             100,
             0,
-            isPredator ? get_predator_sm() : StateMachine{},
+            isPredator ? get_predator_sm() : get_peasant_sm(),
             {-1, -1},
             std::stack<int2>{},
             isPredator ? get_predator_bt() : get_peasant_bt(),

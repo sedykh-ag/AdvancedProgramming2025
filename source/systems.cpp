@@ -94,6 +94,7 @@ void npc_predator_system(World &world) {
         for (int j = 0; j < world.characters.transforms.size(); j++)
         {
             if (world.characters.isPredator[j]) continue; // predators don't attack each other
+            // if (world.characters.isHero[j]) continue; // cheat
             auto victimTransform = world.characters.transforms[j];
             if ((predatorTransform.x == victimTransform.x) && (predatorTransform.y == victimTransform.y)) {
                 auto &predatorHealth = world.characters.healths[i];

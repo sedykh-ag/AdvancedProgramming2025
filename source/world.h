@@ -40,7 +40,9 @@ public:
         food_consume_system(*this);
         starvation_system(*this, dt);
         tiredness_system(*this, dt);
-        npc_sm_system(*this, dt);
+
+        // switch here between sm (statemachine) and bt (beh tree)
+        // npc_sm_system(*this, dt);
         npc_bt_system(*this, dt);
     }
 

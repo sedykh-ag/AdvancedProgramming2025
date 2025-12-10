@@ -37,7 +37,7 @@ public:
 
     Status tick(int entity_idx, World &world, float dt) {
         Status status = tickImpl(entity_idx, world, dt);
-        printf("[BT entity=%d] %s -> %s\n", entity_idx, name, statusToString(status));
+        // printf("[BT entity=%d] %s -> %s\n", entity_idx, name, statusToString(status));
         return status;
     }
 };

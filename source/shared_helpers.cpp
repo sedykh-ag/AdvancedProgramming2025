@@ -67,10 +67,11 @@ bool find_closest_food(int entity_idx, World &world) {
     return destination != int2{-1, -1};
 }
 
-void find_closest_peasant(int entity_idx, World &world) {
+bool find_closest_peasant(int entity_idx, World &world) {
     auto transform = world.characters.transforms[entity_idx];
     auto &destination = world.characters.destinations[entity_idx];
     destination = locate_closest_peasant(world.characters, {(int)transform.x, (int)transform.y});
+    return destination != int2{-1, -1};
 }
 
 bool plan_path(int entity_idx, World &world) {
