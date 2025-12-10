@@ -231,7 +231,7 @@ std::shared_ptr<RootNode> get_predator_bt() {
 
     auto findDestination = std::make_shared<SelectorNode>("findDestination");
     findDestination->addChild(findClosestPredatorMate);
-    findDestination->addChild(findClosestPredatorMate);
+    findDestination->addChild(findClosestPeasant);
 
     tryPlanNewPath->addChild(findDestination);
     tryPlanNewPath->addChild(planPath);
