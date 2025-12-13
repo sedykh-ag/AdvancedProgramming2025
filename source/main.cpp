@@ -3,7 +3,15 @@
 #include "optick.h"
 #include "world.h"
 
-#define THREADED 1
+#define SINGLETHREADED 1
+#define MULTITHREADED  2
+#define POOLED         3
+
+#define MODE POOLED
+
+#if MODE == POOLED
+ThreadPool g_threadPool{NUM_CORE_SYSTEMS};
+#endif
 
 void init_world(SDL_Renderer* renderer, World& world);
 void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world);
@@ -62,12 +70,17 @@ int main(int argc, char* argv[])
             float deltaTime = (now - lastTicks) / 1000.0f;
             lastTicks = now;
             {
-                #if THREADED
-                    OPTICK_EVENT("world.update_threaded");
-                    world->update_threaded(deltaTime);
-                #else
+                #if MODE == SINGLETHREADED
                     OPTICK_EVENT("world.update");
                     world->update(deltaTime);
+                #elif MODE == MULTITHREADED
+                    OPTICK_EVENT("world.update_threaded");
+                    world->update_threaded(deltaTime);
+                #elif MODE == POOLED
+                    OPTICK_EVENT("world.update_threaded_pooled");
+                    world->update_threaded_pooled(deltaTime);
+                #else
+                    #error "Unknown MODE"
                 #endif
             }
 

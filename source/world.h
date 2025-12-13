@@ -10,12 +10,14 @@
 #include "systems.h"
 #include "systems_threaded.h"
 #include "camera2d.h"
+#include "thread_pool.h"
 
 
 const int LevelWidth = 120;
 const int LevelHeight = 50;
 const int RoomAttempts = 100;
 
+extern ThreadPool g_threadPool;
 
 class World : public std::enable_shared_from_this<World> {
 private:
@@ -60,6 +62,18 @@ public:
         food_thread.join();
         for (std::thread &t : threads)
             t.join();
+    }
+
+    void update_threaded_pooled(float dt) {
+        do_delayed_removes();
+
+        g_threadPool.enqueue([&](){ foodGenerator->on_update_ts(dt); });
+
+        #define X(system) g_threadPool.enqueue([&](){ system##_ts(*this, dt); });
+            CORE_SYSTEMS_LIST
+        #undef X
+
+        g_threadPool.wait_all_tasks_done();
     }
 
     Dungeon dungeon{LevelWidth, LevelHeight, RoomAttempts};

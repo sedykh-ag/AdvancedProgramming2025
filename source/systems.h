@@ -29,6 +29,10 @@ bool character_can_pass(const Dungeon &dungeon, const int2 p);
     X(reproduction_system) \
     X(npc_bt_system)       \
 
+#define X(system) +1
+    enum { NUM_CORE_SYSTEMS = 0 CORE_SYSTEMS_LIST };
+#undef X
+
 #define X(system) void system(World &world, float dt);
     SYSTEMS_LIST
 #undef X
