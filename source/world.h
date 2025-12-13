@@ -40,17 +40,12 @@ public:
         do_delayed_removes();
 
         foodGenerator->on_update(dt);
-        hero_input_system(*this, dt);
-        npc_predator_system(*this, dt);
-        food_consume_system(*this, dt);
-        starvation_system(*this, dt);
-        tiredness_system(*this, dt);
-        reproduction_system(*this, dt);
-
-        // switch here between sm (statemachine) and bt (beh tree)
-        // npc_sm_system(*this, dt);
-        npc_bt_system(*this, dt);
+        #define X(system) system(*this, dt);
+            CORE_SYSTEMS_LIST
+        #undef X
     }
+
+
 
     Dungeon dungeon{LevelWidth, LevelHeight, RoomAttempts};
     Camera camera;

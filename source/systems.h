@@ -20,6 +20,16 @@ bool character_can_pass(const Dungeon &dungeon, const int2 p);
     X(npc_bt_system)       \
     X(reproduction_system) \
 
+#define CORE_SYSTEMS_LIST  \
+    X(hero_input_system)   \
+    X(npc_predator_system) \
+    X(food_consume_system) \
+    X(starvation_system)   \
+    X(tiredness_system)    \
+    X(reproduction_system) \
+    X(reproduction_system) \
+    X(npc_bt_system)       \
+
 #define X(system) void system(World &world, float dt);
     SYSTEMS_LIST
 #undef X
