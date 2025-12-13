@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <thread>
 #include <vector>
 
 #include "dungeon_generator.h"
@@ -38,14 +39,28 @@ private:
 public:
     void update(float dt) {
         do_delayed_removes();
-
         foodGenerator->on_update(dt);
+
         #define X(system) system(*this, dt);
             CORE_SYSTEMS_LIST
         #undef X
     }
 
+    void update_threaded(float dt) {
+        do_delayed_removes();
 
+        std::thread food_thread{[&](){ foodGenerator->on_update_ts(dt); }};
+
+        #define X(system) std::thread{[&](){ system##_ts(*this, dt); }},
+        std::thread threads[] = {
+            CORE_SYSTEMS_LIST
+        };
+        #undef X
+
+        food_thread.join();
+        for (std::thread &t : threads)
+            t.join();
+    }
 
     Dungeon dungeon{LevelWidth, LevelHeight, RoomAttempts};
     Camera camera;

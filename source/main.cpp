@@ -3,6 +3,8 @@
 #include "optick.h"
 #include "world.h"
 
+#define THREADED 1
+
 void init_world(SDL_Renderer* renderer, World& world);
 void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world);
 
@@ -60,8 +62,13 @@ int main(int argc, char* argv[])
             float deltaTime = (now - lastTicks) / 1000.0f;
             lastTicks = now;
             {
-                OPTICK_EVENT("world.update");
-                world->update(deltaTime);
+                #if THREADED
+                    OPTICK_EVENT("world.update_threaded");
+                    world->update_threaded(deltaTime);
+                #else
+                    OPTICK_EVENT("world.update");
+                    world->update(deltaTime);
+                #endif
             }
 
             // Теперь сразу цвет внутри Clear

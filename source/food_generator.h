@@ -1,8 +1,11 @@
 #pragma once
 
+#include "optick.h"
 #include "archetypes.h"
 #include "dungeon_generator.h"
+#include <mutex>
 
+extern std::mutex g_worldMutex;
 
 class FoodGenerator {
 private:
@@ -47,5 +50,16 @@ public:
             // spawn food
             generate_random_food();
         }
+    }
+
+    void on_update_ts(float dt) {
+        OPTICK_THREAD("food_generator_thread");
+        std::unique_lock<std::mutex> lock(g_worldMutex, std::defer_lock);
+        {
+            OPTICK_EVENT("MutexWait");
+            lock.lock();
+        }
+        OPTICK_EVENT();
+        on_update(dt);
     }
 };
