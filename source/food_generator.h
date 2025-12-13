@@ -3,9 +3,9 @@
 #include "optick.h"
 #include "archetypes.h"
 #include "dungeon_generator.h"
-#include <mutex>
+#include "spinlock_mutex.h"
 
-extern std::mutex g_worldMutex;
+extern spinlock_mutex g_worldMutex;
 
 class FoodGenerator {
 private:
@@ -53,12 +53,12 @@ public:
     }
 
     void on_update_ts(float dt) {
-        std::unique_lock<std::mutex> lock(g_worldMutex, std::defer_lock);
         {
             OPTICK_EVENT("MutexWait");
-            lock.lock();
+            g_worldMutex.lock(spinlock_idle_opts::noop<>{});
         }
         OPTICK_EVENT();
         on_update(dt);
+        g_worldMutex.unlock();
     }
 };

@@ -81,15 +81,6 @@ public:
 
 namespace spinlock_idle_opts
 {
-
-struct yield_thread
-{
-    void operator()() const
-    {
-        std::this_thread::yield();
-    }
-};
-
 template<unsigned Count = 1>
 struct noop
 {
@@ -101,18 +92,6 @@ struct noop
         }
     }
 };
-
-template<unsigned Initial = 8, unsigned Scale = 4>
-struct spinner
-{
-    volatile unsigned m_stopper = Initial;
-    void operator()()
-    {
-        for (volatile unsigned count = 0; count < m_stopper; ++count) { }
-        m_stopper *= Scale;
-    }
-};
-
 } // namespace spinlock_idle_opts {}
 
 // ========================================================

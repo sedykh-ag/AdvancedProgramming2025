@@ -8,6 +8,7 @@
 #include <thread>
 
 #include "optick.h"
+#include "spinlock_mutex.h"
 
 
 class ThreadPool {
@@ -21,7 +22,7 @@ public:
                 while (true) {
                     std::function<void()> task;
                     {
-                        std::unique_lock<std::mutex> lock(
+                        std::unique_lock<spinlock_mutex> lock(
                             queue_mutex_);
 
                         cv_.wait(lock, [this] {
@@ -39,7 +40,7 @@ public:
                     task();
 
                     {
-                        std::unique_lock<std::mutex> lock(queue_mutex_);
+                        std::unique_lock<spinlock_mutex> lock(queue_mutex_);
                         --unfinished_tasks_;
                         if (unfinished_tasks_ == 0)
                             finished_all_tasks_cv_.notify_one();
@@ -52,7 +53,7 @@ public:
     ~ThreadPool()
     {
         {
-            std::unique_lock<std::mutex> lock(queue_mutex_);
+            std::unique_lock<spinlock_mutex> lock(queue_mutex_);
             stop_ = true;
         }
         cv_.notify_all();
@@ -64,7 +65,7 @@ public:
     void enqueue(std::function<void()> task)
     {
         {
-            std::unique_lock<std::mutex> lock(queue_mutex_);
+            std::unique_lock<spinlock_mutex> lock(queue_mutex_);
             tasks_.emplace(std::move(task));
             ++unfinished_tasks_;
         }
@@ -73,7 +74,7 @@ public:
 
     void wait_all_tasks_done()
     {
-        std::unique_lock<std::mutex> lock(queue_mutex_);
+        std::unique_lock<spinlock_mutex> lock(queue_mutex_);
         finished_all_tasks_cv_.wait(lock, [this] {
             return unfinished_tasks_ == 0;
         });
@@ -82,9 +83,9 @@ public:
 private:
     std::vector<std::thread> threads_;
     std::queue<std::function<void()>> tasks_;
-    std::mutex queue_mutex_;
-    std::condition_variable cv_;
-    std::condition_variable finished_all_tasks_cv_;
+    spinlock_mutex queue_mutex_;
+    std::condition_variable_any cv_;
+    std::condition_variable_any finished_all_tasks_cv_;
     bool stop_ = false;
     size_t unfinished_tasks_ = 0;
 };
