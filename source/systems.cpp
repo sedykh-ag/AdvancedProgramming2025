@@ -85,7 +85,7 @@ void npc_walk_system(World &world, float dt) {
     }
 }
 
-void npc_predator_system(World &world) {
+void npc_predator_system(World &world, float dt) {
     const float moveCooldown = 1.0f;
     for (int i = 0; i < world.characters.transforms.size(); i++)
     {
@@ -124,7 +124,7 @@ void npc_bt_system(World &world, float dt) {
     }
 }
 
-void food_consume_system(World &world) {
+void food_consume_system(World &world, float dt) {
     for (size_t i = 0; i < world.characters.transforms.size(); i++)
     {
         if (world.characters.isPredator[i]) continue;

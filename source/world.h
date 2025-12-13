@@ -7,6 +7,7 @@
 #include "food_generator.h"
 #include "archetypes.h"
 #include "systems.h"
+#include "systems_threaded.h"
 #include "camera2d.h"
 
 
@@ -16,8 +17,8 @@ const int RoomAttempts = 100;
 
 
 class World : public std::enable_shared_from_this<World> {
-public:
-    void update(float dt) {
+private:
+    void do_delayed_removes() {
         std::sort(charactersDelayedRemove.begin(), charactersDelayedRemove.end(), std::greater<size_t>());
         charactersDelayedRemove.erase(
             std::unique(charactersDelayedRemove.begin(), charactersDelayedRemove.end()), charactersDelayedRemove.end()
@@ -33,11 +34,15 @@ public:
         for (const size_t index : foodsDelayedRemove)
             foods.remove(index);
         foodsDelayedRemove.clear();
+    }
+public:
+    void update(float dt) {
+        do_delayed_removes();
 
         foodGenerator->on_update(dt);
         hero_input_system(*this, dt);
-        npc_predator_system(*this);
-        food_consume_system(*this);
+        npc_predator_system(*this, dt);
+        food_consume_system(*this, dt);
         starvation_system(*this, dt);
         tiredness_system(*this, dt);
         reproduction_system(*this, dt);
