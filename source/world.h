@@ -51,9 +51,15 @@ public:
     void update_threaded(float dt) {
         do_delayed_removes();
 
-        std::thread food_thread{[&](){ foodGenerator->on_update_ts(dt); }};
+        std::thread food_thread{[&](){
+            OPTICK_THREAD("food_generator_thread");
+            foodGenerator->on_update_ts(dt);
+        }};
 
-        #define X(system) std::thread{[&](){ system##_ts(*this, dt); }},
+        #define X(system) std::thread{[&](){  \
+            OPTICK_THREAD(#system "_thread"); \
+            system##_ts(*this, dt);           \
+        }},
         std::thread threads[] = {
             CORE_SYSTEMS_LIST
         };
@@ -67,9 +73,13 @@ public:
     void update_threaded_pooled(float dt) {
         do_delayed_removes();
 
-        g_threadPool.enqueue([&](){ foodGenerator->on_update_ts(dt); });
+        g_threadPool.enqueue([&](){
+            foodGenerator->on_update_ts(dt);
+        });
 
-        #define X(system) g_threadPool.enqueue([&](){ system##_ts(*this, dt); });
+        #define X(system) g_threadPool.enqueue([&](){ \
+            system##_ts(*this, dt);                   \
+        });
             CORE_SYSTEMS_LIST
         #undef X
 

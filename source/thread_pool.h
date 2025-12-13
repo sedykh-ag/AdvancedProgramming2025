@@ -1,8 +1,14 @@
+#pragma once
+
 #include <condition_variable>
+#include <format>
 #include <functional>
 #include <mutex>
 #include <queue>
 #include <thread>
+
+#include "optick.h"
+
 
 class ThreadPool {
 public:
@@ -10,7 +16,8 @@ public:
                = std::thread::hardware_concurrency())
     {
         for (size_t i = 0; i < num_threads; ++i) {
-            threads_.emplace_back([this] {
+            threads_.emplace_back([this, i] {
+                OPTICK_THREAD(std::format("worker {}", i).c_str());
                 while (true) {
                     std::function<void()> task;
                     {

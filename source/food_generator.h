@@ -53,7 +53,6 @@ public:
     }
 
     void on_update_ts(float dt) {
-        OPTICK_THREAD("food_generator_thread");
         std::unique_lock<std::mutex> lock(g_worldMutex, std::defer_lock);
         {
             OPTICK_EVENT("MutexWait");
