@@ -27,7 +27,6 @@ bool character_can_pass(const Dungeon &dungeon, const int2 p);
     X(starvation_system)   \
     X(tiredness_system)    \
     X(reproduction_system) \
-    X(reproduction_system) \
     X(npc_bt_system)       \
 
 #define X(system) void system(World &world, float dt);
