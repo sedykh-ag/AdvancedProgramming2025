@@ -1,5 +1,9 @@
-#include <SDL3/SDL.h>
+#include <atomic>
 #include <iostream>
+
+#include <SDL3/SDL.h>
+
+#include "image.h"
 #include "optick.h"
 #include "world.h"
 
@@ -13,7 +17,7 @@
 ThreadPool g_threadPool{NUM_CORE_SYSTEMS};
 #endif
 
-void init_world(SDL_Renderer* renderer, World& world);
+void init_world(TexturePtr tilemap, World& world);
 void render_world(SDL_Window* window, SDL_Renderer* renderer, World& world);
 
 int main(int argc, char* argv[])
@@ -45,13 +49,14 @@ int main(int argc, char* argv[])
         SDL_Quit();
         return 1;
     }
+    TexturePtr tilemap = LoadTextureFromFile("assets/kenney_tiny-dungeon/Tilemap/tilemap.png", renderer);
 
     {
-        auto world = std::make_shared<World>();
+        std::atomic<std::shared_ptr<World>> world = std::make_shared<World>();
 
         {
             OPTICK_EVENT("world.init");
-            init_world(renderer, *world);
+            init_world(tilemap, *std::atomic_load(&world));
         }
 
         bool quit = false;
@@ -69,16 +74,31 @@ int main(int argc, char* argv[])
             Uint64 now = SDL_GetTicks();
             float deltaTime = (now - lastTicks) / 1000.0f;
             lastTicks = now;
+
+            std::thread worldRebuilder;
+            const bool* keys = SDL_GetKeyboardState(nullptr);
+            if (keys[SDL_SCANCODE_R]) {
+                worldRebuilder = std::thread([&world, &tilemap]() {
+                    OPTICK_THREAD("world_rebuilder_thread");
+                    OPTICK_EVENT("world.rebuild");
+                    auto newWorld = std::make_shared<World>();
+                    init_world(tilemap, *newWorld);
+                    std::atomic_store(&world, newWorld);
+                });
+            }
+
             {
+                // here, localWorld could be rebuilt world if rebuilder makes it in time
+                auto localWorld = std::atomic_load(&world);
                 #if MODE == SINGLETHREADED
                     OPTICK_EVENT("world.update");
-                    world->update(deltaTime);
+                    localWorld->update(deltaTime);
                 #elif MODE == MULTITHREADED
                     OPTICK_EVENT("world.update_threaded");
-                    world->update_threaded(deltaTime);
+                    localWorld->update_threaded(deltaTime);
                 #elif MODE == POOLED
                     OPTICK_EVENT("world.update_threaded_pooled");
-                    world->update_threaded_pooled(deltaTime);
+                    localWorld->update_threaded_pooled(deltaTime);
                 #else
                     #error "Unknown MODE"
                 #endif
@@ -88,12 +108,17 @@ int main(int argc, char* argv[])
             SDL_SetRenderDrawColor(renderer, 50, 50, 150, 255);
             SDL_RenderClear(renderer);
             {
+                // here, localWorld could be rebuilt world if rebuilder makes it in time
+                auto localWorld = std::atomic_load(&world);
                 OPTICK_EVENT("world.render");
                 // Отрисовка всех игровых объектов
-                render_world(window, renderer, *world);
+                render_world(window, renderer, *localWorld);
             }
 
             SDL_RenderPresent(renderer);
+
+            if (worldRebuilder.joinable())
+                worldRebuilder.join();
         }
     }
 

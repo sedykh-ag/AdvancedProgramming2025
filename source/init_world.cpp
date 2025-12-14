@@ -247,10 +247,9 @@ std::shared_ptr<RootNode> get_predator_bt() {
 
 std::unique_ptr<TileSet> tilesetPtr{nullptr};
 
-void init_world( SDL_Renderer* renderer, World& world)
+void init_world(TexturePtr tilemap, World& world)
 {
     const int tileSize = 16;
-    TexturePtr tilemap = LoadTextureFromFile("assets/kenney_tiny-dungeon/Tilemap/tilemap.png", renderer);
     std::vector<Sprite> sprites;
     if (!tilemap)
     {
